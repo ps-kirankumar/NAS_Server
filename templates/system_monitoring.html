@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}System Monitoring - NAS Server{% endblock %}
+{% block content %}
+<h2>System Monitoring</h2>
+<ul>
+    <li><strong>Uptime:</strong> {{ uptime }}</li>
+    <li><strong>Disk Total:</strong> {{ disk_total }}</li>
+    <li><strong>Disk Used:</strong> {{ disk_used }}</li>
+    <li><strong>Disk Free:</strong> {{ disk_free }}</li>
+    <li><strong>Disk Usage:</strong> {{ disk_percent }}%</li>
+</ul>
+{% endblock %}
+

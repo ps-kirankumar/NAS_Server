@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Restore Files{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4 text-primary">Restore Files</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label class="form-label">Select files to restore:</label>
+            <div class="form-check">
+                {% for file in files_in_backup %}
+                <div>
+                    <input type="checkbox" name="files" value="{{ file }}" id="file{{ loop.index }}">
+                    <label class="form-check-label" for="file{{ loop.index }}">{{ file }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success mt-3">Restore Selected Files</button>
+    </form>
+    <div class="mt-3">
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}
+
