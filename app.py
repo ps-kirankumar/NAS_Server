@@ -60,38 +60,33 @@ def home():
 def manage_users():
     if session.get('role') != 'admin':
         flash('You do not have permission to perform this action.', 'error')
-        return redirect(url_for('home'))  # Redirect to home for unauthorized access
+        return redirect(url_for('home'))
 
-    # Handling GET request to render the manage_users page
-    if request.method == 'GET':
-        # Fetch the users from the database to display on the page
+    # Handle user creation
+    if request.method == 'POST' and 'create_user' in request.form:
+        username = request.form['username']
+        email = request.form['email']
+        password = generate_password_hash(request.form['password'])
+        role = request.form['role']
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, username, role FROM users")
-        users = cur.fetchall()  # Fetch all users
-        cur.close()
-        
-        return render_template('manage_users.html', users=users)
+        try:
+            cur.execute("INSERT INTO users (username, email, password, role) VALUES (%s, %s, %s, %s)",
+                        (username, email, password, role))
+            mysql.connection.commit()
+            flash('User created successfully!', 'success')
+        except Exception as e:
+            flash(f'Error creating user: {e}', 'error')
+        finally:
+            cur.close()
+        return redirect(url_for('manage_users'))
 
-    # Handling POST request to update user roles
-    user_id = request.form.get('user_id')
-    new_role = request.form.get('new_role')
-
-    if not user_id or not new_role:
-        flash('Missing data for role update.', 'error')
-        return redirect(url_for('manage_users'))  # Stay on the same page if form data is incomplete
-
-    # Update user role in the database
+    # Fetch existing users
     cur = mysql.connection.cursor()
-    try:
-        cur.execute("UPDATE users SET role = %s WHERE id = %s", (new_role, user_id))
-        mysql.connection.commit()
-        flash('User role updated successfully!', 'success')
-    except Exception as e:
-        flash(f'Error updating role: {e}', 'error')
-    finally:
-        cur.close()
-    
-    return redirect(url_for('manage_users'))  # Redirect back to the manage users page after the update
+    cur.execute("SELECT id, username, email, role FROM users")
+    users = cur.fetchall()
+    cur.close()
+
+    return render_template('manage_users.html', users=users)
 
 
 
@@ -114,6 +109,27 @@ def delete_user():
         cur.close()
     
     return redirect(url_for('manage_users'))
+
+@app.route('/create_folder', methods=['GET', 'POST'])
+def create_folder():
+    if 'user_id' not in session:
+        flash('You need to log in first!', 'error')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        folder_name = request.form['folder_name']
+        if folder_name:
+            folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)  # Adjust for the folder path
+
+            try:
+                # Create the folder
+                os.makedirs(folder_path, exist_ok=True)
+                flash(f'Folder "{folder_name}" created successfully!', 'success')
+            except Exception as e:
+                flash(f'Error creating folder: {e}', 'error')
+            return redirect(url_for('home'))  # Redirect to home after folder creation
+
+    return render_template('create_folder.html')  # A new HTML page for creating folders
 
 
 # Admin: View Logs
@@ -319,4 +335,3 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
